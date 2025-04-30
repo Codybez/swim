@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 10px;
+
+        overflow-x: hidden;
+        background: linear-gradient(
+          135deg,
+          #56ccf2,
+          #2f80ed
+        ); /* Aqua to deep blue */
+      }
+
+      h2 {
+        text-align: center;
+        margin: 1.5rem 0;
+        color: #333;
+      }
+
+      .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* always two columns */
+        gap: 10px;
+
+        max-width: 100vw; /* full screen width */
+        margin: 0;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        transition: transform 0.2s ease-in-out;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .card:hover {
+        transform: scale(1.02);
+      }
+
+      .card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+      }
+
+      .card-content {
+        padding: 1rem;
+        text-align: center;
+      }
+
+      .card h3 {
+        margin: 0.5rem 0 0.3rem;
+        font-size: 1.1rem;
+        color: #333;
+      }
+
+      .card p {
+        font-size: 0.9rem;
+        color: #666;
+        margin: 0.3rem 0 1rem;
+      }
+
+      .card button {
+        background: #ff5a5f;
+        color: white;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .card button:hover {
+        background: #e14b4f;
+      }
+
+      .footer-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: #ffffff;
+        border-top: 1px solid #ddd;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 10px 0;
+        z-index: 1000;
+      }
+
+      .footer-nav a {
+        text-decoration: none;
+        color: #555;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      .footer-nav a:hover {
+        color: #ff5a5f;
+      }
+
+      @media screen and (max-width: 600px) {
+        .profile-grid {
+          grid-template-columns: 1fr 1fr; /* still 2 cards per row */
+        }
+
+        .card img {
+          height: 160px;
+        }
+
+        .footer-nav a {
+          font-size: 0.85rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="profile-grid">
+        {% for preferences in profiles %}
+        <div class="card">
+          <a href="url_for(view_profile)">
+            <img
+              src="{{ preferences.images[0] if preferences.images else url_for('static', filename='default.jpg') }}"
+              alt="{{ preferences.first_name }}"
+            />
+            <div class="card-content">
+              <h3>{{ preferences.user.first_name }}</h3>
+              <p>{{ preferences.bio or 'No bio yet' }}</p>
+            </div>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Footer Nav -->
+      <nav class="footer-nav">
+        <a href="">Dashboard</a>
+        <a href="">My Swim</a>
+        <a href="">Messages</a>
+        <a href="">Profile</a>
+      </nav>
+    </div>
+  </body>
+</html>

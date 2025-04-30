@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signup</title>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Signup</title>
+        <link
+          rel="stylesheet"
+          href="{{ url_for('static', filename='styles.css') }}"
+        />
+        <style>
+          .signup-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            animation: fadeIn 1s ease;
+          }
+
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          .signup-container h2 {
+            margin-bottom: 20px;
+            color: #333;
+          }
+
+          .signup-container button:hover {
+            background: #fa5252;
+          }
+
+          .step {
+            display: none;
+          }
+
+          .step.active {
+            display: block;
+          }
+        </style>
+      </head>
+
+      <body>
+        <form
+          class="signup-container"
+          method="POST"
+          action="/signup"
+          enctype="multipart/form-data"
+        >
+          <!-- Step 1 -->
+          <div class="step active" id="step1">
+            <h2>What's your first name?</h2>
+            <input type="text" name="first_name" required />
+            <button type="button" onclick="nextStep()">Next</button>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="step" id="step2">
+            <h2>Your gender</h2>
+            <select name="gender" required>
+              <option value="">Select</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+            <button type="button" onclick="nextStep()">Next</button>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="step" id="step3">
+            <h2>When's your birthday?</h2>
+            <input type="date" name="birthday" required />
+            <button type="button" onclick="nextStep()">Next</button>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="step" id="step4">
+            <h2>Email and Password</h2>
+            <input type="email" name="email" required placeholder="Email" />
+            <input
+              type="password"
+              name="password"
+              required
+              placeholder="Password"
+            />
+            <button type="submit">Finish</button>
+          </div>
+        </form>
+
+        <script>
+          let currentStep = 1;
+
+          function nextStep() {
+            document
+              .getElementById("step" + currentStep)
+              .classList.remove("active");
+            currentStep++;
+            document
+              .getElementById("step" + currentStep)
+              .classList.add("active");
+          }
+        </script>
+      </body>
+    </html>
+  </head>
+</html>
