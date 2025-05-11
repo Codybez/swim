@@ -418,11 +418,18 @@ def profile():
 
 @app.route("/modal/profile/<int:user_id>")
 def profile_modal(user_id):
-
     user = User.query.get_or_404(user_id)  # Get user details
-    preferences = Preferences.query.filter_by(user_id=user_id).first()  # Get preferences for that user
+    preferences = Preferences.query.filter_by(user_id=user_id).first()  # Get their preferences
 
-    return render_template("profile_modal.html", user=user, preferences=preferences)
+    all_preferences = Preferences.query.all()  # If needed in template
+
+    return render_template(
+        "profile_modal.html",
+        user=user,
+        preferences=preferences,
+        all_preferences=all_preferences,
+        calculate_age=calculate_age  # Pass the age function to the template
+    )
 
 @app.route("/save-preferences", methods=["POST"])
 @login_required

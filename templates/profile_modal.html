@@ -18,7 +18,8 @@
 
     <!-- User info -->
     <div class="modal-info">
-      <h2>{{ user.first_name }},</h2>
+      <h2>{{ user.first_name }}</h2> <p>{{ calculate_age(user.birthday) }}</p>
+
       <p>{{ preferences.bio or "No bio yet." }}</p>
       {% if preferences.interests %}
       <div>
