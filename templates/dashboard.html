@@ -4,23 +4,27 @@
     <meta charset="UTF-8" />
     <title>Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Swiper CSS and JS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
 
     <style>
       * {
         box-sizing: border-box;
       }
 
+      .container {
+        padding: 5px;
+      }
+
       body {
-        font-family: "Segoe UI", sans-serif;
-        margin: 0;
-        padding: 10px;
+        font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+          "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
 
         overflow-x: hidden;
-        background: linear-gradient(
-          135deg,
-          #56ccf2,
-          #2f80ed
-        ); /* Aqua to deep blue */
       }
 
       h2 {
@@ -92,20 +96,6 @@
         background: #e14b4f;
       }
 
-      .footer-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: #ffffff;
-        border-top: 1px solid #ddd;
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        padding: 10px 0;
-        z-index: 1000;
-      }
-
       .footer-nav a {
         text-decoration: none;
         color: #555;
@@ -130,35 +120,130 @@
           font-size: 0.85rem;
         }
       }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.7);
+      }
+
+      .modal-content {
+        background-color: #fff;
+        margin: 0 auto;
+        padding: 1rem;
+        max-width: 600px;
+        height: 100%;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .close {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        font-size: 38px;
+        cursor: pointer;
+        z-index: 9999;
+        color: #ff6b6b;
+      }
+
+      .swiper-container {
+        width: 100%;
+        height: 300px;
+      }
+
+      .slider-image {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        border-radius: 12px;
+      }
+
+      .modal-info {
+        padding-top: 1rem;
+        text-align: center;
+      }
+
+      .interest-tag {
+        background-color: #ff6b6b;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        display: inline-block;
+        margin: 4px;
+      }
     </style>
   </head>
 
   <body>
+    {% extends "base.html" %} {% block title %}Home - My Website{% endblock %}
+    {% block content %}
     <div class="container">
       <div class="profile-grid">
-        {% for preferences in profiles %}
-        <div class="card">
-          <a href="url_for(view_profile)">
-            <img
-              src="{{ preferences.images[0] if preferences.images else url_for('static', filename='default.jpg') }}"
-              alt="{{ preferences.first_name }}"
-            />
-            <div class="card-content">
-              <h3>{{ preferences.user.first_name }}</h3>
-              <p>{{ preferences.bio or 'No bio yet' }}</p>
-            </div>
-          </a>
+        {% for pref in profiles %}
+        <div class="card" onclick="openProfileModal({{ pref.user.id }})">
+          <h3>{{ pref.user.first_name }}</h3>
+          <p>Gender: {{ pref.user.gender }}</p>
+          <p>Age: {{ calculate_age(pref.user.birthday) }}</p>
+          <p>Bio: {{ pref.bio }}</p>
+
+          <!-- Display only the first image -->
+          {% if pref.image1 %}
+          <img
+            src="{{ url_for('static', filename='uploads/' + pref.image1) }}"
+            alt="Profile Image"
+          />
+          {% endif %}
         </div>
         {% endfor %}
       </div>
 
-      <!-- Footer Nav -->
-      <nav class="footer-nav">
-        <a href="">Dashboard</a>
-        <a href="">My Swim</a>
-        <a href="">Messages</a>
-        <a href="">Profile</a>
-      </nav>
+      <!-- Modal shell on main page -->
+      <div id="profileModal" class="modal" style="display: none">
+        <div id="modalBody" class="modal-content">
+          <!-- Content is loaded dynamically -->
+        </div>
+      </div>
     </div>
   </body>
+  <script>
+    function openProfileModal(userId) {
+      fetch(`/modal/profile/${userId}`)
+        .then((res) => res.text())
+        .then((html) => {
+          document.getElementById("modalBody").innerHTML = html;
+          document.getElementById("profileModal").style.display = "block";
+
+          // ✅ Initialize Swiper after content is inserted
+          new Swiper(".swiper-container", {
+            loop: true,
+            navigation: {
+              nextEl: ".swiper-button-next",
+              prevEl: ".swiper-button-prev",
+            },
+            pagination: {
+              el: ".swiper-pagination",
+              clickable: true,
+            },
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to load profile:", err);
+          alert("Failed to load profile. Please try again.");
+        });
+    }
+
+    function closeModal() {
+      document.getElementById("profileModal").style.display = "none";
+    }
+  </script>
+  {% endblock %}
 </html>

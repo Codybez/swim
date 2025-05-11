@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+
+
+
+<style>
+    body{
+        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    
+    }
+
+input[type="text"], input[type="number"], select, textarea {
+  width: 90%;
+  padding: 10px;
+  font-size: 1em;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+input[type="text"]:focus, select:focus, textarea:focus {
+  border-color: #007bff;
+}
+
+textarea {
+  resize: vertical;
+  height: 150px;
+}
+
+button[type="submit"] {
+  padding: 12px 25px;
+  font-size: 1em;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+/* Icon Styling */
+label i {
+  margin-right: 8px;
+  color: #007bff;
+}
+
+
+.profile-image:hover {
+  transform: scale(1.05);
+  border-color: #aaa;
+}
+.image-row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 5px;
+  padding: 10px 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.image-slot {
+  flex: 1;
+  aspect-ratio: 1 / 1;
+  max-width: 17%; /* Each takes up 20% of row, adjusts with screen size */
+}
+
+.profile-image,
+.placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+  background-color: #f0f0f0;
+  color: #aaa;
+  cursor: pointer;
+}
+#save-button {
+  position: fixed;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 14px 28px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  display: none;
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+}
+#save-button:hover {
+  background-color: #0056b3;
+}
+
+.form-group {
+  margin-bottom: 5px;
+  padding: 10px;
+}
+ .interest-input-wrapper {
+    position: relative;
+    width: 90%;
+    margin-bottom: 10px;
+    margin-left: 10px;
+  }
+
+  .interest-input-wrapper input {
+    width: 90%;
+    padding: 10px 40px 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    margin-top: 20px;
+  }
+
+  .interest-input-wrapper button {
+    position: absolute;
+    right: -5px;
+    top: 65%;
+    transform: translateY(-50%);
+    background-color: #ff6b6b;
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    
+  }
+
+  .interests-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-left: 10px;
+    margin-top: 20px;
+    
+  }
+
+  .interest-tag {
+    background-color: #ff6b6b;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .interest-tag span {
+    cursor: pointer;
+    font-weight: bold;
+  }
+</style>
+
+
+</head>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  for (let i = 1; i <= 5; i++) {
+    const fileInput = document.getElementById('image' + i);
+    const label = document.querySelector(`label[for='image${i}']`);
+
+    fileInput.addEventListener('change', function (event) {
+      const file = event.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const existingImage = label.querySelector('img');
+          const placeholder = label.querySelector('.placeholder');
+
+          if (existingImage) {
+            existingImage.src = e.target.result;
+          } else if (placeholder) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'profile-image';
+            img.alt = 'Preview';
+            placeholder.replaceWith(img);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+});
+
+  let isFormSubmitted = false;
+
+  window.addEventListener("beforeunload", function (e) {
+    if (!isFormSubmitted) {
+      autoSaveForm();
+    }
+  });
+
+
+</script>
+
+
+<body>
+{% extends "base.html" %} {% block title %}Home - My Website{% endblock %}
+{% block content %}
+
+<form method="POST" enctype="multipart/form-data">
+  <!-- Image Row Section -->
+  <div class="image-row">
+    {% for i in range(5) %}
+    <div class="image-slot">
+      <input type="file" id="image{{ i+1 }}" name="image{{ i+1 }}" style="display: none;">
+      <label for="image{{ i+1 }}">
+        {% if preferences['image' ~ (i+1)] %}
+          <img src="{{ url_for('static', filename='uploads/' ~ preferences['image' ~ (i+1)]) }}" class="profile-image" alt="Image {{ i+1 }}">
+        {% else %}
+          <div class="profile-image placeholder">+</div>
+        {% endif %}
+      </label>
+    </div>
+    {% endfor %}
+  </div>
+
+
+
+
+  <!-- User Preferences Section -->
+  <div class="form-group">
+    <label for="bio"><i class="fas fa-pencil-alt"></i> Bio:</label>
+    <textarea id="bio" name="bio">{{ preferences.bio }}</textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="preferred_gender"><i class="fas fa-genderless"></i> Preferred Gender:</label>
+    <input type="text" id="preferred_gender" name="preferred_gender" value="{{ preferences.preferred_gender }}">
+  </div>
+
+  <div class="form-group">
+    <label for="star_sign"><i class="fas fa-star"></i> Star Sign:</label>
+    <select id="star_sign" name="star_sign">
+        <option value="" {% if not preferences.star_sign %}selected{% endif %}>Leave empty</option>
+        <option value="Aries" {% if preferences.star_sign == 'Aries' %}selected{% endif %}>Aries</option>
+        <option value="Taurus" {% if preferences.star_sign == 'Taurus' %}selected{% endif %}>Taurus</option>
+        <option value="Gemini" {% if preferences.star_sign == 'Gemini' %}selected{% endif %}>Gemini</option>
+        <option value="Cancer" {% if preferences.star_sign == 'Cancer' %}selected{% endif %}>Cancer</option>
+        <option value="Leo" {% if preferences.star_sign == 'Leo' %}selected{% endif %}>Leo</option>
+        <option value="Virgo" {% if preferences.star_sign == 'Virgo' %}selected{% endif %}>Virgo</option>
+        <option value="Libra" {% if preferences.star_sign == 'Libra' %}selected{% endif %}>Libra</option>
+        <option value="Scorpio" {% if preferences.star_sign == 'Scorpio' %}selected{% endif %}>Scorpio</option>
+        <option value="Sagittarius" {% if preferences.star_sign == 'Sagittarius' %}selected{% endif %}>Sagittarius</option>
+        <option value="Capricorn" {% if preferences.star_sign == 'Capricorn' %}selected{% endif %}>Capricorn</option>
+        <option value="Aquarius" {% if preferences.star_sign == 'Aquarius' %}selected{% endif %}>Aquarius</option>
+        <option value="Pisces" {% if preferences.star_sign == 'Pisces' %}selected{% endif %}>Pisces</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="mbti_type"><i class="fas fa-user-cog"></i> MBTI Type:</label>
+    <select id="mbti_type" name="mbti_type">
+        <option value="" {% if not preferences.mbti_type %}selected{% endif %}>Leave empty</option>
+        <option value="INTJ" {% if preferences.mbti_type == 'INTJ' %}selected{% endif %}>INTJ</option>
+        <option value="INTP" {% if preferences.mbti_type == 'INTP' %}selected{% endif %}>INTP</option>
+        <option value="ENTJ" {% if preferences.mbti_type == 'ENTJ' %}selected{% endif %}>ENTJ</option>
+        <option value="ENTP" {% if preferences.mbti_type == 'ENTP' %}selected{% endif %}>ENTP</option>
+        <option value="INFJ" {% if preferences.mbti_type == 'INFJ' %}selected{% endif %}>INFJ</option>
+        <option value="INFP" {% if preferences.mbti_type == 'INFP' %}selected{% endif %}>INFP</option>
+        <option value="ENFJ" {% if preferences.mbti_type == 'ENFJ' %}selected{% endif %}>ENFJ</option>
+        <option value="ENFP" {% if preferences.mbti_type == 'ENFP' %}selected{% endif %}>ENFP</option>
+        <option value="ISTJ" {% if preferences.mbti_type == 'ISTJ' %}selected{% endif %}>ISTJ</option>
+        <option value="ISFJ" {% if preferences.mbti_type == 'ISFJ' %}selected{% endif %}>ISFJ</option>
+        <option value="ESTJ" {% if preferences.mbti_type == 'ESTJ' %}selected{% endif %}>ESTJ</option>
+        <option value="ESFJ" {% if preferences.mbti_type == 'ESFJ' %}selected{% endif %}>ESFJ</option>
+        <option value="ISTP" {% if preferences.mbti_type == 'ISTP' %}selected{% endif %}>ISTP</option>
+        <option value="ISFP" {% if preferences.mbti_type == 'ISFP' %}selected{% endif %}>ISFP</option>
+        <option value="ESTP" {% if preferences.mbti_type == 'ESTP' %}selected{% endif %}>ESTP</option>
+        <option value="ESFP" {% if preferences.mbti_type == 'ESFP' %}selected{% endif %}>ESFP</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="height"><i class="fas fa-ruler"></i> Height (cm):</label>
+    <input type="number" id="height" name="height" value="{{ preferences.height }}">
+  </div>
+
+  <div class="form-group">
+    <label for="smoking"><i class="fas fa-smoking"></i> Do you smoke?</label>
+    <select id="smoking" name="smoking">
+        <option value="" {% if not preferences.mbti_type %}selected{% endif %}>Leave empty</option>
+        <option value="Yes" {% if preferences.smoking == 'Yes' %}selected{% endif %}>Yes</option>
+        <option value="No" {% if preferences.smoking == 'No' %}selected{% endif %}>No</option>
+        <option value="Occasional" {% if preferences.smoking == 'Occasional' %}selected{% endif %}>Occasional</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="drinking"><i class="fas fa-glass-cheers"></i> Do you drink?</label>
+    <select id="drinking" name="drinking">
+        <option value="" {% if not preferences.mbti_type %}selected{% endif %}>Leave empty</option>
+        <option value="Yes" {% if preferences.drinking == 'Yes' %}selected{% endif %}>Yes</option>
+        <option value="No" {% if preferences.drinking == 'No' %}selected{% endif %}>No</option>
+        <option value="Socially" {% if preferences.drinking == 'Socially' %}selected{% endif %}>Socially</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="music_preferences"><i class="fas fa-headphones"></i> Music Preferences:</label>
+    <input type="text" id="music_preferences" name="music_preferences" value="{{ preferences.music_preferences }}">
+  </div>
+
+  <div class="form-group">
+    <label for="fitness"><i class="fas fa-dumbbell"></i> Fitness:</label>
+    <input type="text" id="fitness" name="fitness" value="{{ preferences.fitness }}">
+  </div>
+
+  <div class="form-group">
+    <label for="job_title"><i class="fas fa-briefcase"></i> Job Title:</label>
+    <input type="text" id="job_title" name="job_title" value="{{ preferences.job_title }}">
+  </div>
+
+  <div class="form-group">
+    <label for="education"><i class="fas fa-graduation-cap"></i> Education:</label>
+    <input type="text" id="education" name="education" value="{{ preferences.education }}">
+  </div>
+
+  <div class="form-group">
+    <label for="pets"><i class="fas fa-paw"></i> Do you have pets?</label>
+    <select id="pets" name="pets">
+        <option value="Yes" {% if preferences.pets == 'Yes' %}selected{% endif %}>Yes</option>
+        <option value="No" {% if preferences.pets == 'No' %}selected{% endif %}>No</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="children"><i class="fas fa-child"></i> Do you have children or want children?</label>
+    <select id="children" name="children">
+        <option value="" {% if not preferences.mbti_type %}selected{% endif %}>Leave empty</option>
+        <option value="Yes" {% if preferences.children == 'Yes' %}selected{% endif %}>Yes</option>
+        <option value="No" {% if preferences.children == 'No' %}selected{% endif %}>No</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="looking_for"><i class="fas fa-search"></i> What are you looking for?</label>
+    <input type="text" id="looking_for" name="looking_for" value="{{ preferences.looking_for }}">
+  </div>
+
+  <!-- Submit Button -->
+  <button type="submit" id="save-button" class="btn btn-primary">Save Changes</button>
+
+</form>
+
+
+</body>
+<script>
+   
+
+  document.addEventListener('DOMContentLoaded', function () {
+  const form = document.querySelector('form');
+  const saveButton = document.getElementById('save-button');
+
+  // Show the save button on any input, textarea, or select change
+  form.querySelectorAll('input, textarea, select').forEach(el => {
+    el.addEventListener('input', () => {
+      saveButton.style.display = 'block';
+    });
+    el.addEventListener('change', () => {
+      saveButton.style.display = 'block';
+    });
+  });
+
+  // Set flag when form is submitted
+  form.addEventListener('submit', () => {
+    saveButton.disabled = true;
+    saveButton.innerText = 'Saving...';
+  });
+});
+
+
+</script>
+  {% endblock %}
+</html>

@@ -10,10 +10,25 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.sql import func
 from math import radians, cos, sin, asin, sqrt
+from flask_login import current_user, login_required
+from flask_login import LoginManager
+from flask_login import UserMixin
+from flask_login import logout_user
+from flask_login import login_user
+
 
 app = Flask(__name__)
 
 app.secret_key = 'your_secret_key_here'  # Needed for flashing messages
+
+login_manager = LoginManager()  # Create a LoginManager instance
+login_manager.init_app(app)  # Initialize it with the app
+
+# Define the user loader function
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))  # Replace `User` with your user model
+
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fishydatabase.db'  # or any other database URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # optional, to avoid warnings
@@ -45,13 +60,14 @@ mail = Mail(app)
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     
     # Basic Info
     first_name = db.Column(db.String(100), nullable=False)
     gender = db.Column(db.String(20), nullable=False)
     birthday = db.Column(db.Date, nullable=False)
+
     
     # Auth Info
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -69,29 +85,39 @@ class User(db.Model):
 class Preferences(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    image1 = db.Column(db.String(255), nullable=True)
+    image2 = db.Column(db.String(255), nullable=True)
+    image3 = db.Column(db.String(255), nullable=True)
+    image4 = db.Column(db.String(255), nullable=True)
+    image5 = db.Column(db.String(255), nullable=True)
     preferred_gender = db.Column(db.String(50), nullable=False)
     min_age = db.Column(db.Integer, nullable=False)
     max_age = db.Column(db.Integer, nullable=False)
     interests = db.Column(db.String(200))  # Store as a comma-separated string or use a relationship for more complex data
     bio = db.Column(db.Text)
-    images = db.Column(db.JSON)
     latitude = db.Column(db.Float)   # for geo filtering
     longitude = db.Column(db.Float)
     radius_km = db.Column(db.Integer)
+
+    # New fields added
+    star_sign = db.Column(db.String(50), nullable=True)
+    mbti_type = db.Column(db.String(10), nullable=True)
+    height = db.Column(db.Integer, nullable=True)
+    smoking = db.Column(db.String(50), nullable=True)
+    drinking = db.Column(db.String(50), nullable=True)
+    music_preferences = db.Column(db.String(200), nullable=True)
+    fitness = db.Column(db.String(100), nullable=True)
+    job_title = db.Column(db.String(100), nullable=True)
+    education = db.Column(db.String(100), nullable=True)
+    pets = db.Column(db.String(50), nullable=True)
+    children = db.Column(db.String(50), nullable=True)
+    looking_for = db.Column(db.String(200), nullable=True)
 
     user = db.relationship('User', backref='preferences')  # One-to-one relationship with User
 
     def __repr__(self):
         return f'<Preferences {self.id}>'
 
-class UserImage(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    image_url = db.Column(db.String(255), nullable=False)
-    caption = db.Column(db.String(255))
-    position = db.Column(db.Integer, nullable=False, default=0)
-
-    user = db.relationship('User', backref='images', lazy=True)
 
 @app.route('/')
 def index():
@@ -166,7 +192,7 @@ def login():
         user = User.query.filter_by(email=email).first()
 
         if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
-            session['user_id'] = user.id
+            login_user(user)
 
             # Check if preferences are missing
             if not user.preferences:
@@ -178,10 +204,14 @@ def login():
 
     return render_template('login.html')
 
+from werkzeug.utils import secure_filename
+import os
+
+
 @app.route('/preferences', methods=['GET', 'POST'])
+@login_required  # Ensures the user is logged in before accessing this route
 def preferences():
-    user_id = session.get('user_id')
-    user = User.query.get(user_id)
+    user = current_user  # Get the current logged-in user (Flask-Login handles this)
 
     if request.method == 'POST':
         # Get data from the form
@@ -193,15 +223,26 @@ def preferences():
         radius_km = request.form['radius']
         latitude = request.form['latitude']
         longitude = request.form['longitude']
-        images = request.files.getlist('images[]')
 
-        image_paths = []
-        for image in images:
+        # Print the form data to the console (Optional for debugging)
+        print(f"Preferred Gender: {preferred_gender}")
+        print(f"Min Age: {min_age}")
+        print(f"Max Age: {max_age}")
+        print(f"Interests: {interests}")
+        print(f"Bio: {bio}")
+        print(f"Radius (km): {radius_km}")
+        print(f"Latitude: {latitude}")
+        print(f"Longitude: {longitude}")
+
+        # Process images
+        image_paths = {}
+        for i in range(1, 6):  # Loop over image1, image2, image3, image4, image5
+            image = request.files.get(f'image{i}')  # Get each image field
             if image:
                 filename = secure_filename(image.filename)
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 image.save(file_path)
-                image_paths.append(file_path)
+                image_paths[f'image{i}'] = filename  # Save image to corresponding field
 
         # Create or update preferences for the user
         if user.preferences:
@@ -211,32 +252,41 @@ def preferences():
             user.preferences.max_age = max_age
             user.preferences.interests = interests
             user.preferences.bio = bio
-            radius_km=int(radius_km),
-            latitude=float(latitude),
-            longitude=float(longitude)
-            user.preferences.images = image_paths
+            user.preferences.radius_km = int(radius_km)
+            user.preferences.latitude = float(latitude)
+            user.preferences.longitude = float(longitude)
+
+            # Update the image fields
+            for key, path in image_paths.items():
+                setattr(user.preferences, key, path)
+
         else:
             # If no preferences, create a new preferences record
             new_preferences = Preferences(
-                user_id=user.id,
+                user_id=user.id,  # Use current_user's id
                 preferred_gender=preferred_gender,
                 min_age=min_age,
                 max_age=max_age,
                 interests=interests,
                 bio=bio,
-                radius_km=radius_km,
-                latitude=latitude,
-                longitude=longitude,
-                images=image_paths
-
+                radius_km=int(radius_km),
+                latitude=float(latitude),
+                longitude=float(longitude),
+                **image_paths  # Spread the image paths to their corresponding fields (image1, image2, etc.)
             )
             db.session.add(new_preferences)
 
-        db.session.commit()  # Save the changes to the database
-
+        try:
+            db.session.commit()  # Save the changes to the database
+            print("Preferences committed successfully.")
+        except Exception as e:
+            db.session.rollback()  # Rollback in case of error
+            print(f"Error committing preferences: {e}")
+        
         return redirect(url_for('dashboard'))  # Redirect after saving preferences
 
     return render_template('preferences.html')
+
 
 
 def allowed_file(filename):
@@ -291,7 +341,8 @@ def calculate_age(birthday):
 
 @app.route('/dashboard')
 def dashboard():
-    user_id = session.get('user_id')
+    user = current_user
+    user_id = user.id 
     if not user_id:
         return redirect(url_for('login'))
 
@@ -322,9 +373,86 @@ def dashboard():
                     # Check age and gender preferences
                     if min_age <= age <= max_age:
                         if preferred_gender == "Any" or pref.user.gender == preferred_gender:
+                            # Add the preferences to nearby profiles, including image paths
                             nearby_profiles.append(pref)
 
-    return render_template('dashboard.html', profiles=nearby_profiles)
+    return render_template('dashboard.html', profiles=nearby_profiles, calculate_age=calculate_age)
+
+@app.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    user = User.query.get(current_user.id)
+    preferences = Preferences.query.filter_by(user_id=user.id).first()
+
+    if request.method == "POST":
+        # Handle image uploads
+        for i in range(1, 6):
+            image_file = request.files.get(f"image{i}")
+            if image_file and image_file.filename:
+                filename = secure_filename(image_file.filename)
+                upload_path = os.path.join("static", "uploads", filename)
+                image_file.save(upload_path)
+                setattr(preferences, f"image{i}", filename)
+
+        # Update other fields safely
+        preferences.bio = request.form.get("bio")
+        preferences.preferred_gender = request.form.get("preferred_gender")
+        preferences.star_sign = request.form.get("star_sign")
+        preferences.mbti_type = request.form.get("mbti_type")
+        preferences.height = request.form.get("height")
+        preferences.smoking = request.form.get("smoking")
+        preferences.drinking = request.form.get("drinking")
+        preferences.music_preferences = request.form.get("music_preferences")
+        preferences.fitness = request.form.get("fitness")
+        preferences.job_title = request.form.get("job_title")
+        preferences.education = request.form.get("education")
+        preferences.pets = request.form.get("pets")
+        preferences.children = request.form.get("children")
+        preferences.looking_for = request.form.get("looking_for")
+
+        db.session.commit()
+        flash('Your profile has been updated!', 'success')
+        return redirect(url_for('profile'))
+
+    return render_template("profile.html", user=user, preferences=preferences)
+
+@app.route("/modal/profile/<int:user_id>")
+def profile_modal(user_id):
+
+    user = User.query.get_or_404(user_id)  # Get user details
+    preferences = Preferences.query.filter_by(user_id=user_id).first()  # Get preferences for that user
+
+    return render_template("profile_modal.html", user=user, preferences=preferences)
+
+@app.route("/save-preferences", methods=["POST"])
+@login_required
+def save_preferences():
+    preferences = current_user.preferences
+
+    # Save all the fields
+    preferences.bio = request.form.get("bio")
+    preferences.preferred_gender = request.form.get("preferred_gender")
+    preferences.star_sign = request.form.get("star_sign")
+    preferences.mbti_type = request.form.get("mbti_type")
+    preferences.height = request.form.get("height")
+    preferences.smoking = request.form.get("smoking")
+    preferences.drinking = request.form.get("drinking")
+    preferences.music_preferences = request.form.get("music_preferences")
+    preferences.fitness = request.form.get("fitness")
+    preferences.job_title = request.form.get("job_title")
+    preferences.education = request.form.get("education")
+    preferences.pets = request.form.get("pets")
+    preferences.children = request.form.get("children")
+    preferences.interests = request.form.get("interests")  # <-- Add this line
+
+    db.session.commit()
+    return "", 204  # Empty response, success
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
 
 
 if __name__ == '__main__':

@@ -1,0 +1,32 @@
+
+    <!-- Close button placed above the slider -->
+    <span class="close" onclick="closeModal()">&times;</span>
+
+    <!-- Swiper image slider -->
+    <div class="swiper-container">
+      <div class="swiper-wrapper">
+        {% for img in [preferences.image1, preferences.image2, preferences.image3, preferences.image4, preferences.image5] if img %}
+        <div class="swiper-slide">
+          <img src="{{ url_for('static', filename='uploads/' ~ img) }}" class="slider-image" alt="Profile Image" />
+        </div>
+        {% endfor %}
+      </div>
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-pagination"></div>
+    </div>
+
+    <!-- User info -->
+    <div class="modal-info">
+      <h2>{{ user.first_name }},</h2>
+      <p>{{ preferences.bio or "No bio yet." }}</p>
+      {% if preferences.interests %}
+      <div>
+        {% for interest in preferences.interests.split(',') %}
+        <span class="interest-tag">{{ interest.strip() }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
