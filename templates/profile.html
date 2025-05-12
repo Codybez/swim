@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
+        <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 
 
@@ -49,6 +55,7 @@ button[type="submit"]:hover {
 label i {
   margin-right: 8px;
   color: #007bff;
+  margin-bottom: 10px;
 }
 
 
@@ -113,69 +120,153 @@ label i {
   margin-bottom: 5px;
   padding: 10px;
 }
- .interest-input-wrapper {
-    position: relative;
-    width: 90%;
-    margin-bottom: 10px;
-    margin-left: 10px;
-  }
+#interests-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  
+}
 
-  .interest-input-wrapper input {
-    width: 90%;
-    padding: 10px 40px 10px 12px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-    margin-top: 20px;
-  }
+.interest-tag {
+  background-color: #f0f0f0;
+  color: #333;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
 
-  .interest-input-wrapper button {
-    position: absolute;
-    right: -5px;
-    top: 65%;
-    transform: translateY(-50%);
-    background-color: #ff6b6b;
-    border: none;
-    color: white;
-    font-weight: bold;
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    cursor: pointer;
-    font-size: 16px;
-    line-height: 1;
-    padding: 0;
-    
-  }
+.editable-tag .remove-btn {
+  margin-left: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #888;
+  background-color: transparent;
+  border: none;
+  font-size: 14px;
+  transition: color 0.2s;
+}
 
-  .interests-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding-left: 10px;
-    margin-top: 20px;
-    
-  }
+.editable-tag .remove-btn:hover {
+  color: red;
+}
 
-  .interest-tag {
-    background-color: #ff6b6b;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
+#new-interest {
+  padding: 6px;
+  width: 200px;
+  margin-right: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
 
-  .interest-tag span {
-    cursor: pointer;
-    font-weight: bold;
-  }
+button[onclick="addInterest()"] {
+  padding: 6px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.button-btn-secondary{
+
+  width: 100%;
+  padding: 12px;
+  background: #ff6b6b; /* Ocean teal */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.3s;
+
+
+}
+button[onclick="addInterest()"]:hover {
+  background-color: #0056b3;
+}
+.interests-section {
+  padding-left: 16px;
+}
+     
+          .modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 9999; /* Ensure modal is on top */
+        
+      }
+
+      .modal-content {
+        background-color: #fff;
+        margin: 0 auto;
+        
+        max-width: 600px;
+        height: 100%;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .close {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        font-size: 38px;
+        cursor: pointer;
+        z-index: 9999;
+        color: #ff6b6b;
+      }
+
+      .swiper-container {
+        width: 100%;
+        height: 300px;
+      }
+
+      .slider-image {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+      }
+
+      .modal-info {
+        padding-top: 1rem;
+        text-align: center;
+      }
 </style>
 
 
 </head>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+      var swiper = new Swiper('.swiper-container', {
+          loop: true,
+          slidesPerView: 1,
+          spaceBetween: 10,
+          navigation: {
+              nextEl: '.swiper-button-next',
+              prevEl: '.swiper-button-prev',
+          },
+          pagination: {
+              el: '.swiper-pagination',
+              clickable: true,
+          },
+      });
+  });
+</script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   for (let i = 1; i <= 5; i++) {
@@ -222,6 +313,19 @@ document.addEventListener('DOMContentLoaded', function () {
 {% extends "base.html" %} {% block title %}Home - My Website{% endblock %}
 {% block content %}
 
+<!-- Modal shell on main page -->
+<div id="profileModal" class="modal" style="display: none">
+    <div id="modalBody" class="modal-content">
+          <!-- Content is loaded dynamically -->
+    </div>
+</div>
+
+<button type="button" class="btn btn-secondary" 
+style="background-color: #007bff; border: none; color: white; padding: 8px 10px; border-radius: 8px; font-weight: 500; margin-left: 10px; margin-bottom: 10px;" 
+onclick="openProfileModal({{ current_user.id }})">Preview My Profile</button>
+
+
+
 <form method="POST" enctype="multipart/form-data">
   <!-- Image Row Section -->
   <div class="image-row">
@@ -238,8 +342,32 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
     {% endfor %}
   </div>
+<div class="interests-section">
+  <label for="new-interest">Your Interests:</label>
+  <div id="interests-container">
+    {% if preferences.interests %}
+      {% for interest in preferences.interests.split(',') %}
+        <span class="interest-tag editable-tag">
+          {{ interest.strip() }}
+          <span class="remove-btn" onclick="removeInterest(this)">×</span>
+        </span>
+      {% endfor %}
+    {% endif %}
+  </div>
 
 
+<!-- Input field to add new interests -->
+<input type="text" style="margin-bottom: 10px;"  id="new-interest" placeholder="Add new interest" />
+<button type="button" onclick="addInterest()">Add</button>
+
+<!-- Hidden input to store the final list -->
+<input type="hidden" name="interests" id="interests-hidden">
+</div>
+
+  <div class="form-group">
+    <label for="location"><i class="fas fa-location"></i> Your Location:</label>
+    <input type="text" id="location" name="location" value="{{ preferences.location }}">
+  </div>
 
 
   <!-- User Preferences Section -->
@@ -368,9 +496,71 @@ document.addEventListener('DOMContentLoaded', function () {
 </form>
 
 
+
 </body>
 <script>
-   
+
+    let selectedInterests = [];
+
+function toggleInterest(interest) {
+  const index = selectedInterests.indexOf(interest);
+  if (index > -1) {
+    selectedInterests.splice(index, 1);
+  } else {
+    selectedInterests.push(interest);
+  }
+}
+
+
+   function removeInterest(btn) {
+  btn.parentElement.remove();
+  updateHiddenInterests();
+}
+
+function addInterest() {
+  const input = document.getElementById('new-interest');
+  const value = input.value.trim();
+  if (!value) return;
+
+  const container = document.getElementById('interests-container');
+
+  // Avoid duplicate interests
+  const existing = [...container.querySelectorAll('.editable-tag')].map(tag =>
+    tag.childNodes[0].nodeValue.trim().toLowerCase()
+  );
+  if (existing.includes(value.toLowerCase())) {
+    input.value = '';
+    return;
+  }
+
+  const tag = document.createElement('span');
+  tag.className = 'interest-tag editable-tag';
+  tag.textContent = value;
+
+  const removeBtn = document.createElement('span');
+  removeBtn.textContent = '×';
+  removeBtn.className = 'remove-btn';
+  removeBtn.onclick = () => {
+    tag.remove();
+    updateHiddenInterests();
+  };
+
+  tag.appendChild(removeBtn);
+  container.appendChild(tag);
+
+  input.value = '';
+  updateHiddenInterests();
+}
+
+function updateHiddenInterests() {
+  const tags = document.querySelectorAll('.editable-tag');
+  const interests = Array.from(tags).map(tag => tag.childNodes[0].nodeValue.trim());
+  document.getElementById('interests-hidden').value = interests.join(',');
+  console.log('Hidden interests field value:', hiddenField.value);  // Log to verify it's updated
+}
+
+// Run once on page load to populate the hidden field
+document.addEventListener('DOMContentLoaded', updateHiddenInterests);
 
   document.addEventListener('DOMContentLoaded', function () {
   const form = document.querySelector('form');
@@ -392,6 +582,42 @@ document.addEventListener('DOMContentLoaded', function () {
     saveButton.innerText = 'Saving...';
   });
 });
+
+// Attach event listeners to the "remove" buttons to show the save button when clicked
+document.querySelectorAll('.remove-btn').forEach(removeBtn => {
+  removeBtn.addEventListener('click', () => {
+    saveButton.style.display = 'block';  // Show the save button when a remove button is clicked
+  });
+});
+function openProfileModal(userId) {
+      fetch(`/modal/profile/${userId}`)
+        .then((res) => res.text())
+        .then((html) => {
+          document.getElementById("modalBody").innerHTML = html;
+          document.getElementById("profileModal").style.display = "block";
+
+          // ✅ Initialize Swiper after content is inserted
+          new Swiper(".swiper-container", {
+            loop: true,
+            navigation: {
+              nextEl: ".swiper-button-next",
+              prevEl: ".swiper-button-prev",
+            },
+            pagination: {
+              el: ".swiper-pagination",
+              clickable: true,
+            },
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to load profile:", err);
+          alert("Failed to load profile. Please try again.");
+        });
+    }
+
+function closeModal() {
+  document.getElementById('profileModal').style.display = 'none';
+}
 
 
 </script>

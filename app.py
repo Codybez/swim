@@ -95,6 +95,7 @@ class Preferences(db.Model):
     max_age = db.Column(db.Integer, nullable=False)
     interests = db.Column(db.String(200))  # Store as a comma-separated string or use a relationship for more complex data
     bio = db.Column(db.Text)
+    location = db.Column(db.String(50))
     latitude = db.Column(db.Float)   # for geo filtering
     longitude = db.Column(db.Float)
     radius_km = db.Column(db.Integer)
@@ -220,6 +221,7 @@ def preferences():
         max_age = request.form['max_age']
         interests = request.form['interests']
         bio = request.form['bio']
+        location = request.form.get("location")
         radius_km = request.form['radius']
         latitude = request.form['latitude']
         longitude = request.form['longitude']
@@ -233,6 +235,7 @@ def preferences():
         print(f"Radius (km): {radius_km}")
         print(f"Latitude: {latitude}")
         print(f"Longitude: {longitude}")
+        print(f"Location: {location}")
 
         # Process images
         image_paths = {}
@@ -252,6 +255,7 @@ def preferences():
             user.preferences.max_age = max_age
             user.preferences.interests = interests
             user.preferences.bio = bio
+            user.preferences.location = location
             user.preferences.radius_km = int(radius_km)
             user.preferences.latitude = float(latitude)
             user.preferences.longitude = float(longitude)
@@ -269,6 +273,7 @@ def preferences():
                 max_age=max_age,
                 interests=interests,
                 bio=bio,
+                location=location,
                 radius_km=int(radius_km),
                 latitude=float(latitude),
                 longitude=float(longitude),
@@ -378,6 +383,24 @@ def dashboard():
 
     return render_template('dashboard.html', profiles=nearby_profiles, calculate_age=calculate_age)
 
+@app.route('/preview-profile/<int:user_id>')
+@login_required
+def preview_profile(user_id):
+    user = User.query.get_or_404(user_id)  # Get user details
+    preferences = Preferences.query.filter_by(user_id=user_id).first()  # Get their preferences
+
+    all_preferences = Preferences.query.all()  # If needed in template
+
+    return render_template(
+        "profile_modal.html",
+        user=user,
+        preferences=preferences,
+        all_preferences=all_preferences,
+        calculate_age=calculate_age  # Pass the age function to the template
+    )
+
+
+
 @app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
@@ -396,6 +419,8 @@ def profile():
 
         # Update other fields safely
         preferences.bio = request.form.get("bio")
+        preferences.location = request.form.get("location")
+        preferences.interests = request.form.get("interests")
         preferences.preferred_gender = request.form.get("preferred_gender")
         preferences.star_sign = request.form.get("star_sign")
         preferences.mbti_type = request.form.get("mbti_type")
@@ -437,6 +462,7 @@ def save_preferences():
     preferences = current_user.preferences
 
     # Save all the fields
+    preferences.location = request.form.get("location")
     preferences.bio = request.form.get("bio")
     preferences.preferred_gender = request.form.get("preferred_gender")
     preferences.star_sign = request.form.get("star_sign")
@@ -450,7 +476,7 @@ def save_preferences():
     preferences.education = request.form.get("education")
     preferences.pets = request.form.get("pets")
     preferences.children = request.form.get("children")
-    preferences.interests = request.form.get("interests")  # <-- Add this line
+    preferences.interests = request.form.get('interests', '').strip()
 
     db.session.commit()
     return "", 204  # Empty response, success

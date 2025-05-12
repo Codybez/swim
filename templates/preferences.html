@@ -13,6 +13,7 @@
       href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
     />
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
     <script>
       var overlay = document.getElementById("map-overlay");
 
@@ -321,6 +322,7 @@
         <div class="progress-step">5</div>
         <div class="progress-step">6</div>
         <div class="progress-step">7</div>
+        <div class="progress-step">8</div>
       </div>
 
       <form
@@ -539,10 +541,29 @@
             </div>
           </div>
         </div>
+        <!-- Step 5 - Town Name Entry -->
+        <div class="step">
+          <h1>What's your location?</h1>
+          <label for="location">Enter your town or city:</label>
+          <input
+            type="text"
+            name="location"
+            id="location"
+            placeholder="e.g., Auckland"
+            required
+            style="
+              width: 100%;
+              padding: 10px;
+              border-radius: 6px;
+              border: 1px solid #ccc;
+              margin-top: 10px;
+            "
+          />
+        </div>
 
         <!-- Step 6 - Location Selection -->
         <div class="step">
-          <h1 for="location">Select Your Location</h1>
+          <h1 for="location">Where are you looking to date?</h1>
 
           <!-- Map Container -->
           <div
@@ -584,6 +605,24 @@
     </div>
 
     <script>
+      function initAutocomplete() {
+        const input = document.getElementById("location-input");
+        const options = {
+          types: ["(cities)"], // restrict to cities
+          componentRestrictions: { country: "nz" }, // restrict to New Zealand
+        };
+        new google.maps.places.Autocomplete(input, options);
+      }
+
+      window.initAutocomplete = initAutocomplete;
+
+      // Make sure it runs when the script loads
+      window.addEventListener("load", () => {
+        if (typeof google !== "undefined") {
+          initAutocomplete();
+        }
+      });
+
       const progressSteps = document.querySelectorAll(".progress-step");
       const steps = document.querySelectorAll(".step");
       const nextButton = document.getElementById("nextButton");
