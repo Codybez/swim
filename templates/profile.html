@@ -343,7 +343,7 @@ onclick="openProfileModal({{ current_user.id }})">Preview My Profile</button>
     {% endfor %}
   </div>
 <div class="interests-section">
-  <label for="new-interest">Your Interests:</label>
+  <label for="new-interest"><i class="fas fa-heart"></i>Your Interests:</label>
   <div id="interests-container">
     {% if preferences.interests %}
       {% for interest in preferences.interests.split(',') %}
@@ -357,7 +357,7 @@ onclick="openProfileModal({{ current_user.id }})">Preview My Profile</button>
 
 
 <!-- Input field to add new interests -->
-<input type="text" style="margin-bottom: 10px;"  id="new-interest" placeholder="Add new interest" />
+<input type="text" style="margin-bottom: 10px;"  id="new-interest" placeholder="Add new interest" maxlength="20" />
 <button type="button" onclick="addInterest()">Add</button>
 
 <!-- Hidden input to store the final list -->
@@ -376,10 +376,21 @@ onclick="openProfileModal({{ current_user.id }})">Preview My Profile</button>
     <textarea id="bio" name="bio">{{ preferences.bio }}</textarea>
   </div>
 
-  <div class="form-group">
-    <label for="preferred_gender"><i class="fas fa-genderless"></i> Preferred Gender:</label>
-    <input type="text" id="preferred_gender" name="preferred_gender" value="{{ preferences.preferred_gender }}">
+    <div class="form-group">
+    <label for="children"><i class="fas fa-child"></i> Do you have children or want children?</label>
+    <select id="children" name="children">
+        <option value="" {% if not preferences.mbti_type %}selected{% endif %}>Leave empty</option>
+        <option value="Yes" {% if preferences.children == 'Yes' %}selected{% endif %}>Yes</option>
+        <option value="No" {% if preferences.children == 'No' %}selected{% endif %}>No</option>
+    </select>
   </div>
+
+  <div class="form-group">
+    <label for="looking_for"><i class="fas fa-search"></i> What are you looking for?</label>
+    <input type="text" id="looking_for" name="looking_for" value="{{ preferences.looking_for }}">
+  </div>
+
+
 
   <div class="form-group">
     <label for="star_sign"><i class="fas fa-star"></i> Star Sign:</label>
@@ -476,19 +487,12 @@ onclick="openProfileModal({{ current_user.id }})">Preview My Profile</button>
     </select>
   </div>
 
-  <div class="form-group">
-    <label for="children"><i class="fas fa-child"></i> Do you have children or want children?</label>
-    <select id="children" name="children">
-        <option value="" {% if not preferences.mbti_type %}selected{% endif %}>Leave empty</option>
-        <option value="Yes" {% if preferences.children == 'Yes' %}selected{% endif %}>Yes</option>
-        <option value="No" {% if preferences.children == 'No' %}selected{% endif %}>No</option>
-    </select>
+    <div class="form-group">
+    <label for="preferred_gender"><i class="fas fa-genderless"></i> Preferred Gender:</label>
+    <input type="text" id="preferred_gender" name="preferred_gender" value="{{ preferences.preferred_gender }}">
   </div>
 
-  <div class="form-group">
-    <label for="looking_for"><i class="fas fa-search"></i> What are you looking for?</label>
-    <input type="text" id="looking_for" name="looking_for" value="{{ preferences.looking_for }}">
-  </div>
+
 
   <!-- Submit Button -->
   <button type="submit" id="save-button" class="btn btn-primary">Save Changes</button>

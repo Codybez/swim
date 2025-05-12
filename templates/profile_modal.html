@@ -1,4 +1,38 @@
-    <span class="close" onclick="closeModal()">&times;</span>
+  <style>
+    .preferences-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.preference-block {
+  background-color: #f8f8f8;
+  border-radius: 12px;
+  padding: 15px;
+  text-align: left;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.preference-block i {
+  color: #007bff; /* Blue icon */
+  font-size: 1.2em;
+  width: 24px;
+  text-align: center;
+}
+
+.preference-block span {
+  color: #333;
+  font-size: 0.95rem;
+}
+
+  </style>
+  
+  
+  <span class="close" onclick="closeModal()">&times;</span>
 
     <!-- Swiper image slider -->
     <div class="swiper-container">
@@ -18,7 +52,7 @@
     <div class="modal-info">
       <h2>{{ user.first_name }}</h2> <p>{{ calculate_age(user.birthday) }}</p>
 
-      <p>{{ preferences.bio or "No bio yet." }}</p>
+
       {% if preferences.interests %}
       <div>
         {% for interest in preferences.interests.split(',') %}
@@ -26,7 +60,50 @@
         {% endfor %}
       </div>
       {% endif %}
+      <p>{{ preferences.bio or "No bio yet." }}</p>
     </div>
+    <div class="preferences-grid">
+  {% set icons = {
+    'star_sign': 'fa-star',
+    'mbti_type': 'fa-brain',
+    'height': 'fa-ruler-vertical',
+    'smoking': 'fa-smoking',
+    'drinking': 'fa-glass-cheers',
+    'music_preferences': 'fa-music',
+    'fitness': 'fa-dumbbell',
+    'job_title': 'fa-briefcase',
+    'education': 'fa-graduation-cap',
+    'pets': 'fa-paw',
+    'children': 'fa-child',
+    'looking_for': 'fa-heart'
+  } %}
+
+  {% for field, label in {
+    'star_sign': 'Star Sign',
+    'mbti_type': 'MBTI Type',
+    'height': 'Height (cm)',
+    'smoking': 'Smoking',
+    'drinking': 'Drinking',
+    'music_preferences': 'Music',
+    'fitness': 'Fitness',
+    'job_title': 'Job Title',
+    'education': 'Education',
+    'pets': 'Pets',
+    'children': 'Children',
+    'looking_for': 'Looking For'
+  }.items() %}
+    {% if preferences[field] %}
+      <div class="preference-block">
+        <i class="fas {{ icons[field] }}"></i>
+        <span>{{ label }}: {{ preferences[field] }}</span>
+      </div>
+    {% endif %}
+  {% endfor %}
+</div>
+
+
+    
     
   </div>
+  
 </div>
