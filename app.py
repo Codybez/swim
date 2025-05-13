@@ -222,7 +222,7 @@ def preferences():
         interests = request.form['interests']
         bio = request.form['bio']
         location = request.form.get("location")
-        radius_km = request.form['radius']
+        radius_km = request.form['radius_km']
         latitude = request.form['latitude']
         longitude = request.form['longitude']
 
@@ -420,6 +420,9 @@ def profile():
         # Update other fields safely
         preferences.bio = request.form.get("bio")
         preferences.location = request.form.get("location")
+        preferences.latitude = request.form.get("latitude")
+        preferences.longitude = request.form.get("longitude")
+        preferences.radius_km = request.form.get("radius_km")
         preferences.interests = request.form.get("interests")
         preferences.preferred_gender = request.form.get("preferred_gender")
         preferences.star_sign = request.form.get("star_sign")
@@ -463,6 +466,9 @@ def save_preferences():
 
     # Save all the fields
     preferences.location = request.form.get("location")
+    preferences.latitude = request.form.get("latitude")
+    preferences.longitude = request.form.get("longitude")
+    preferences.radius_km = request.form.get("radius_km")
     preferences.bio = request.form.get("bio")
     preferences.preferred_gender = request.form.get("preferred_gender")
     preferences.star_sign = request.form.get("star_sign")

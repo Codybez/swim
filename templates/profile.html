@@ -4,12 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
-        <link
+    <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css"
     />
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
 
 
@@ -25,6 +30,7 @@ input[type="text"], input[type="number"], select, textarea {
   font-size: 1em;
   border-radius: 5px;
   border: 1px solid #ccc;
+
 }
 
 input[type="text"]:focus, select:focus, textarea:focus {
@@ -56,6 +62,7 @@ label i {
   margin-right: 8px;
   color: #007bff;
   margin-bottom: 10px;
+ 
 }
 
 
@@ -205,13 +212,14 @@ button[onclick="addInterest()"]:hover {
         height: 100vh;
         background-color: rgba(0, 0, 0, 0.7);
         z-index: 9999; /* Ensure modal is on top */
+        overflow-x: hidden;
         
       }
 
       .modal-content {
         background-color: #fff;
         margin: 0 auto;
-        
+        overflow-x: hidden;
         max-width: 600px;
         height: 100%;
         overflow-y: auto;
@@ -227,7 +235,7 @@ button[onclick="addInterest()"]:hover {
         font-size: 38px;
         cursor: pointer;
         z-index: 9999;
-        color: #ff6b6b;
+        color: #fff;
       }
 
       .swiper-container {
@@ -245,11 +253,34 @@ button[onclick="addInterest()"]:hover {
         padding-top: 1rem;
         text-align: center;
       }
+
+      .swiper-pagination {
+  top: 250px !important;          /* Move to top */
+  bottom: auto !important;       /* Prevent it from being stuck at the bottom */
+  position: absolute !important;
+  width: 100%;
+  text-align: center;
+  z-index: 10;
+}
+    #profile-map {
+      height: 400px;
+      width: 95%;
+      margin: 20px 0;
+      margin-left: 10px;
+    }
+
+.radius-selector {
+  margin-left: 10px;
+}
 </style>
 
 
 </head>
 <script>
+
+ 
+
+
   document.addEventListener('DOMContentLoaded', function() {
       var swiper = new Swiper('.swiper-container', {
           loop: true,
@@ -306,6 +337,11 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
 
+  function closeConfirmationModal() {
+    confirmationModal.style.display = "none";
+  }
+
+
 </script>
 
 
@@ -355,6 +391,7 @@ onclick="openProfileModal({{ current_user.id }})">Preview My Profile</button>
     {% endif %}
   </div>
 
+  
 
 <!-- Input field to add new interests -->
 <input type="text" style="margin-bottom: 10px;"  id="new-interest" placeholder="Add new interest" maxlength="20" />
@@ -364,30 +401,132 @@ onclick="openProfileModal({{ current_user.id }})">Preview My Profile</button>
 <input type="hidden" name="interests" id="interests-hidden">
 </div>
 
+
+
   <div class="form-group">
     <label for="location"><i class="fas fa-location"></i> Your Location:</label>
     <input type="text" id="location" name="location" value="{{ preferences.location }}">
   </div>
 
+<input type="hidden" id="profile-latitude" name="latitude" value="{{ preferences.latitude or '' }}">
+<input type="hidden" id="profile-longitude" name="longitude" value="{{ preferences.longitude or '' }}">
 
-  <!-- User Preferences Section -->
-  <div class="form-group">
-    <label for="bio"><i class="fas fa-pencil-alt"></i> Bio:</label>
-    <textarea id="bio" name="bio">{{ preferences.bio }}</textarea>
-  </div>
+<div id="profile-map" style="height: 300px; border-radius: 8px; margin-bottom: 20px;"></div>
 
+<div class="radius-selector">
+  <label for="profile-radius_km">
+    Search Radius: <span id="profile-radius-value">{{ preferences.radius_km or 10 }}</span> km
+  </label>
+  <input
+    type="range"
+    min="1"
+    max="100"
+    step="1"
+    id="profile-radius_km"
+    name="radius_km"
+    value="{{ preferences.radius_km or 10 }}"
+  />
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const initialLat = parseFloat("{{ preferences.latitude or -41.3 }}");
+  const initialLng = parseFloat("{{ preferences.longitude or 174.7 }}");
+  const initialRadiusKm = parseInt("{{ preferences.radius_km or 10 }}");
+
+  const latInput = document.getElementById("profile-latitude");
+  const lngInput = document.getElementById("profile-longitude");
+  const radiusInput = document.getElementById("profile-radius_km");
+  const radiusDisplay = document.getElementById("profile-radius-value");
+
+  // Initialize map
+  const map = L.map("profile-map", {
+    center: [initialLat, initialLng],
+    zoom: 10,
+    zoomControl: true,
+  });
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors",
+  }).addTo(map);
+
+  // Set initial values
+  latInput.value = initialLat;
+  lngInput.value = initialLng;
+  radiusInput.value = initialRadiusKm;
+  radiusDisplay.textContent = initialRadiusKm;
+
+  // Marker and Circle
+  const marker = L.marker([initialLat, initialLng], { draggable: true }).addTo(map);
+  const circle = L.circle([initialLat, initialLng], {
+    radius: initialRadiusKm * 1000,
+    color: "#FF5722",
+    fillColor: "#FF5722",
+    fillOpacity: 0.2,
+  }).addTo(map);
+
+  // Fit map to circle on load
+  map.fitBounds(circle.getBounds(), { padding: [20, 20] });
+
+
+  // Update location on map click
+  map.on("click", function (e) {
+    const { lat, lng } = e.latlng;
+    marker.setLatLng([lat, lng]);
+    circle.setLatLng([lat, lng]);
+    latInput.value = lat;
+    lngInput.value = lng;
+  });
+
+  // Radius slider input
+  radiusInput.addEventListener("input", function () {
+    const newRadius = parseInt(this.value);
+    radiusDisplay.textContent = newRadius;
+    circle.setRadius(newRadius * 1000);
+    // Optional: zoom based on new radius
+    map.setZoom(calculateZoomForRadius(newRadius));
+  });
+
+  // Marker drag update
+  marker.on("move", function (e) {
+    const { lat, lng } = e.latlng;
+    latInput.value = lat;
+    lngInput.value = lng;
+    circle.setLatLng([lat, lng]);
+  });
+});
+
+</script>
+
+
+
+
+
+<div class="form-group">
+  <label for="looking_for"><i class="fas fa-search"></i> What are you looking for?</label>
+  <select id="looking_for" name="looking_for" class="form-control">
+    <option value="">Leave empty</option>
+    <option value="Long-term partner" {% if preferences.looking_for == 'Long-term partner' %}selected{% endif %}>Long-term partner</option>
+    <option value="Short-term fun" {% if preferences.looking_for == 'Short-term fun' %}selected{% endif %}>Short-term fun</option>
+    <option value="New friends" {% if preferences.looking_for == 'New friends' %}selected{% endif %}>New friends</option>
+    <option value="Still figuring it out" {% if preferences.looking_for == 'Still figuring it out' %}selected{% endif %}>Still figuring it out</option>
+    <option value="Activity partner" {% if preferences.looking_for == 'Activity partner' %}selected{% endif %}>Activity partner</option>
+    <option value="Casual dating" {% if preferences.looking_for == 'Casual dating' %}selected{% endif %}>Casual dating</option>
+    <option value="Open to anything" {% if preferences.looking_for == 'Open to anything' %}selected{% endif %}>Open to anything</option>
+  </select>
+</div>
     <div class="form-group">
     <label for="children"><i class="fas fa-child"></i> Do you have children or want children?</label>
     <select id="children" name="children">
         <option value="" {% if not preferences.mbti_type %}selected{% endif %}>Leave empty</option>
-        <option value="Yes" {% if preferences.children == 'Yes' %}selected{% endif %}>Yes</option>
-        <option value="No" {% if preferences.children == 'No' %}selected{% endif %}>No</option>
-    </select>
-  </div>
+<option value="Yes, and want more" {% if preferences.children == 'Yes, and want more' %}selected{% endif %}>Yes, and want more</option>
+<option value="Yes, don’t want more" {% if preferences.children == 'Yes, don’t want more' %}selected{% endif %}>Yes, don’t want more</option>
+<option value="No, but want someday" {% if preferences.children == 'No, but want someday' %}selected{% endif %}>No, but want someday</option>
+<option value="No, don’t want" {% if preferences.children == 'No, don’t want' %}selected{% endif %}>No, don’t want</option>
+<option value="Undecided" {% if preferences.children == 'Undecided' %}selected{% endif %}>Undecided</option>
 
-  <div class="form-group">
-    <label for="looking_for"><i class="fas fa-search"></i> What are you looking for?</label>
-    <input type="text" id="looking_for" name="looking_for" value="{{ preferences.looking_for }}">
+    </select>
   </div>
 
 
@@ -434,30 +573,34 @@ onclick="openProfileModal({{ current_user.id }})">Preview My Profile</button>
     </select>
   </div>
 
-  <div class="form-group">
-    <label for="height"><i class="fas fa-ruler"></i> Height (cm):</label>
-    <input type="number" id="height" name="height" value="{{ preferences.height }}">
-  </div>
+<div class="form-group">
+  <label for="height"><i class="fas fa-ruler"></i> Height (cm):</label>
+  <input type="number" id="height" name="height" value="{{ preferences.height }}" placeholder="0"
+  min="100" max="250" step="1" class="form-control" />
+</div>
 
-  <div class="form-group">
-    <label for="smoking"><i class="fas fa-smoking"></i> Do you smoke?</label>
-    <select id="smoking" name="smoking">
-        <option value="" {% if not preferences.mbti_type %}selected{% endif %}>Leave empty</option>
-        <option value="Yes" {% if preferences.smoking == 'Yes' %}selected{% endif %}>Yes</option>
-        <option value="No" {% if preferences.smoking == 'No' %}selected{% endif %}>No</option>
-        <option value="Occasional" {% if preferences.smoking == 'Occasional' %}selected{% endif %}>Occasional</option>
-    </select>
-  </div>
-
-  <div class="form-group">
-    <label for="drinking"><i class="fas fa-glass-cheers"></i> Do you drink?</label>
-    <select id="drinking" name="drinking">
-        <option value="" {% if not preferences.mbti_type %}selected{% endif %}>Leave empty</option>
-        <option value="Yes" {% if preferences.drinking == 'Yes' %}selected{% endif %}>Yes</option>
-        <option value="No" {% if preferences.drinking == 'No' %}selected{% endif %}>No</option>
-        <option value="Socially" {% if preferences.drinking == 'Socially' %}selected{% endif %}>Socially</option>
-    </select>
-  </div>
+<div class="form-group">
+  <label for="smoking"><i class="fas fa-smoking"></i> Do you smoke?</label>
+  <select id="smoking" name="smoking">
+    <option value="" {% if not preferences.smoking %}selected{% endif %}>Leave empty</option>
+    <option value="Regularly" {% if preferences.smoking == 'Regularly' %}selected{% endif %}>Regularly</option>
+    <option value="Occasionally" {% if preferences.smoking == 'Occasionally' %}selected{% endif %}>Occasionally</option>
+    <option value="Social smoker" {% if preferences.smoking == 'Social smoker' %}selected{% endif %}>Social smoker</option>
+    <option value="Trying to quit" {% if preferences.smoking == 'Trying to quit' %}selected{% endif %}>Trying to quit</option>
+    <option value="Non-smoker" {% if preferences.smoking == 'Non-smoker' %}selected{% endif %}>Non-smoker</option>
+  </select>
+</div>
+<div class="form-group">
+  <label for="drinking"><i class="fas fa-glass-cheers"></i> Do you drink?</label>
+  <select id="drinking" name="drinking">
+    <option value="" {% if not preferences.drinking %}selected{% endif %}>Leave empty</option>
+    <option value="Regularly" {% if preferences.drinking == 'Regularly' %}selected{% endif %}>Regularly</option>
+    <option value="Socially" {% if preferences.drinking == 'Socially' %}selected{% endif %}>Socially</option>
+    <option value="On special occasions" {% if preferences.drinking == 'On special occasions' %}selected{% endif %}>On special occasions</option>
+    <option value="Rarely" {% if preferences.drinking == 'Rarely' %}selected{% endif %}>Rarely</option>
+    <option value="Sober" {% if preferences.drinking == 'Sober' %}selected{% endif %}>Sober</option>
+  </select>
+</div>
 
   <div class="form-group">
     <label for="music_preferences"><i class="fas fa-headphones"></i> Music Preferences:</label>
@@ -482,6 +625,7 @@ onclick="openProfileModal({{ current_user.id }})">Preview My Profile</button>
   <div class="form-group">
     <label for="pets"><i class="fas fa-paw"></i> Do you have pets?</label>
     <select id="pets" name="pets">
+        <option value="" {% if preferences.pets == '' %}selected{% endif %}>Leave empty</option>
         <option value="Yes" {% if preferences.pets == 'Yes' %}selected{% endif %}>Yes</option>
         <option value="No" {% if preferences.pets == 'No' %}selected{% endif %}>No</option>
     </select>
@@ -499,6 +643,16 @@ onclick="openProfileModal({{ current_user.id }})">Preview My Profile</button>
 
 </form>
 
+</div>
+  <!-- Request Confirmation Box (Second Box) -->
+  <div id="confirmationBox" class="confirmation-box" style="display: none;">
+    <div class="confirmation-content">
+      <span class="close" onclick="closeConfirmationBox()">&times;</span>
+      <h2>Send Connection Request</h2>
+      <p>You're about to send a request to connect with {{ user.first_name }}.</p>
+      <button class="confirm-btn" onclick="submitConnectionRequest()">Confirm Request</button>
+    </div>
+  </div>
 
 
 </body>
@@ -624,6 +778,24 @@ function closeModal() {
 }
 
 
+
+
+
+
+
+
 </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const radiusInput = document.getElementById("radius");
+    const radiusDisplay = document.getElementById("radius-value");
+
+    // When the slider is moved, update the number
+    radiusInput.addEventListener("input", function () {
+      radiusDisplay.textContent = this.value;
+    });
+  });
+</script>
+
   {% endblock %}
 </html>
