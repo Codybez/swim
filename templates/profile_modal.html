@@ -80,53 +80,7 @@
   background-color: rgba(0,0,0,0.6);
 }
 
-/* Confirmation Box (Second Box) */
-.confirmation-box {
-  display: none;
-  position: fixed;
-  z-index: 9999;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent background */
-  overflow: auto;
-}
 
-/* Content of the Confirmation Box */
-.confirmation-content {
-  background-color: #fff;
-  margin: 10% auto;
-  padding: 20px;
-  width: 80%;
-  max-width: 400px;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-.confirmation-content h2 {
-  font-size: 24px;
-  margin-bottom: 20px;
-}
-
-.confirmation-content p {
-  font-size: 16px;
-  margin-bottom: 20px;
-}
-
-.confirmation-content .close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  color: #000;
-  font-size: 30px;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.confirmation-content .close:hover {
-  color: #f00;
-}
 
 /* Confirmation Button */
 .confirm-btn {
@@ -241,15 +195,10 @@
 
 
 {% if user.id != current_user.id %}
-  <button id="requestConnectionBtn" class="request-btn">Request a Connection</button>
+<button class="request-btn" onclick="openRulesModal()">Request Connection</button>
+
 {% endif %} 
-
-
-
-
-
-  
+ 
 </div>
-<script>
 
-</script>
+

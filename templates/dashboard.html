@@ -188,12 +188,91 @@
         text-align: center;
         z-index: 10;
       }
+
+/* Rules Modal */
+#rulesModal {
+  display: none;
+  position: fixed;
+  z-index: 10000; /* On top of other modals */
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+#rulesModal .modal-content {
+  background-color: #fff;
+  width: 100%;
+  height: 100%;
+  padding: 2rem;
+  border-radius: 0; /* Remove rounded corners for full-page */
+  box-shadow: none; /* Optional: remove shadow for fullscreen */
+  position: relative;
+  text-align: center;
+  overflow-y: auto; /* Allow scrolling if content overflows */
+}
+
+#rulesModal .close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 32px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #333;
+}
+
+#rulesModal h2 {
+  font-size: 1.6rem;
+  margin-top: 60px; /* Optional: space below close button */
+  color: #333;
+}
+
+#rulesModal ul {
+  text-align: left;
+  padding: 0;
+  list-style-type: disc;
+  margin: 1.5rem 0 2rem 2rem;
+  color: #555;
+}
+
+#rulesModal button {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#rulesModal button:hover {
+  background: #0056b3;
+}
+
     </style>
   </head>
 
   <body>
     {% extends "base.html" %} {% block title %}Home - My Website{% endblock %}
     {% block content %}
+
+    <!-- Rules Modal -->
+    <div id="rulesModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close" onclick="closeRulesModal()">&times;</span>
+        <h2>Rules for Connecting</h2>
+        <ul>
+          <li>Be respectful and professional.</li>
+          <li>Only connect if you're interested in working together.</li>
+          <li>Violating rules may result in a ban.</li>
+        </ul>
+        <button onclick="confirmRequest()">Confirm and Send Request</button>
+      </div>
+    </div>
+
     <div class="container">
       <div class="profile-grid">
         {% for pref in profiles %}
@@ -253,5 +332,23 @@
       document.getElementById("profileModal").style.display = "none";
     }
   </script>
+<script>
+  function openRulesModal() {
+    document.getElementById("rulesModal").style.display = "block";
+  }
+
+  function closeRulesModal() {
+    document.getElementById("rulesModal").style.display = "none";
+  }
+
+  function confirmRequest() {
+    // Handle the connection request logic here
+    alert("Request sent!");
+    closeRulesModal();
+  }
+</script>
+
+  </script>
+
   {% endblock %}
 </html>

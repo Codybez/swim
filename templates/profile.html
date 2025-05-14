@@ -272,6 +272,10 @@ button[onclick="addInterest()"]:hover {
 .radius-selector {
   margin-left: 10px;
 }
+
+.form-group-bio{
+  padding: 20px;
+}
 </style>
 
 
@@ -501,6 +505,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
+<div class="form-group-bio">
+  <label for="bio"><i class="fas fa-user-edit"></i> Bio:</label>
+  <textarea id="bio" name="bio" rows="4" class="form-control" maxlength="400" placeholder="Tell us a bit about yourself...">{{ preferences.bio }}</textarea>
+</div>
 
 
 <div class="form-group">
