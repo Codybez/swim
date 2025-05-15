@@ -381,7 +381,7 @@ def dashboard():
                             # Add the preferences to nearby profiles, including image paths
                             nearby_profiles.append(pref)
 
-    return render_template('dashboard.html', profiles=nearby_profiles, calculate_age=calculate_age)
+    return render_template('dashboard.html', profiles=nearby_profiles, calculate_age=calculate_age, user=user,)
 
 @app.route('/preview-profile/<int:user_id>')
 @login_required

@@ -9,6 +9,13 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/base.css') }}"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      integrity="sha512-..."
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
     {% block head %}{% endblock %}
     <style>
       /* Minimal styling, customize as needed */
@@ -16,18 +23,24 @@
       html,
       body {
         margin: 0;
-        padding: 0;
+        padding-top: 38px;
       }
       header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem;
-        background-color: #0c3b6f;
-        color: white;
-        margin-bottom: 20px;
+        padding: 0.7rem;
+        background-color: white;
+        color: #007bff;
         z-index: 9999;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: gives a slight shadow */
       }
+
       .hamburger {
         font-size: 1.5rem;
         cursor: pointer;
@@ -83,12 +96,19 @@
       .hamburger-menu a:hover {
         background-color: #f0f0f0;
       }
+
+      .logo i {
+        margin-right: 5px;
+        color: #007bff; /* Matches your theme */
+        font-size: 20px;
+      }
     </style>
   </head>
   <body>
     <!-- Header -->
     <header>
-      <div class="logo">SwimDating</div>
+      <div class="logo"><i class="fas fa-fish"></i> DatingPool</div>
+
       <div class="hamburger">&#9776;</div>
       <div class="hamburger-menu" style="display: none">
         <a href="/profile">My Profile</a>
@@ -100,12 +120,13 @@
     <!-- Main Content -->
     <main>{% block content %}{% endblock %}</main>
 
-    <!-- Footer -->
     <footer>
       <nav class="footer-nav">
         <a href="{{ url_for('dashboard') }}">Dashboard</a>
-        <a href="#">My Swim</a>
-        <a href="#">Messages</a>
+        <a href="#"
+          ><i class="fas fa-heart" style="font-size: 24px; color: #0077b6"></i
+        ></a>
+
         <a href="{{ url_for('profile') }}">Profile</a>
       </nav>
     </footer>

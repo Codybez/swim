@@ -18,13 +18,16 @@
 
       .container {
         padding: 5px;
+        margin-top: -10px;
+        
       }
 
       body {
         font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
           "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
-
+   
         overflow-x: hidden;
+        padding: 5px;
       }
 
       h2 {
@@ -67,18 +70,30 @@
       .card-content {
         padding: 1rem;
         text-align: center;
+        
       }
 
       .card h3 {
-        margin: 0.5rem 0 0.3rem;
+        
         font-size: 1.1rem;
-        color: #333;
+        color: #555;
+        text-align: center;
       }
-
+      
+      .card h3 span {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #007bff;
+        
+        
+     
+      }
       .card p {
-        font-size: 0.9rem;
-        color: #666;
-        margin: 0.3rem 0 1rem;
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: #333;
+        margin-top: -5px;
+        text-align: center;
       }
 
       .card button {
@@ -135,7 +150,6 @@
       .modal-content {
         background-color: #fff;
         margin: 0 auto;
-
         max-width: 600px;
         height: 100%;
         overflow-y: auto;
@@ -170,15 +184,7 @@
         text-align: center;
       }
 
-      .interest-tag {
-        background-color: #f0f0f0;
-        color: #333;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        display: inline-block;
-        margin: 4px;
-      }
+
 
       .swiper-pagination {
         top: 250px !important; /* Move to top */
@@ -252,6 +258,27 @@
   background: #0056b3;
 }
 
+
+
+
+
+.interests-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.interest-tag {
+  background-color: #e0f7fa;
+  color: #007b83;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
     </style>
   </head>
 
@@ -259,36 +286,76 @@
     {% extends "base.html" %} {% block title %}Home - My Website{% endblock %}
     {% block content %}
 
-    <!-- Rules Modal -->
-    <div id="rulesModal" class="modal" style="display: none">
-      <div class="modal-content">
-        <span class="close" onclick="closeRulesModal()">&times;</span>
-        <h2>Rules for Connecting</h2>
-        <ul>
-          <li>Be respectful and professional.</li>
-          <li>Only connect if you're interested in working together.</li>
-          <li>Violating rules may result in a ban.</li>
-        </ul>
-        <button onclick="confirmRequest()">Confirm and Send Request</button>
-      </div>
-    </div>
+<!-- Rules Modal -->
+<div id="rulesModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close" onclick="closeRulesModal()" style="
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    ">&times;</span>
+  
+
+
+    <h2 style="margin-bottom: 20px;">Ready to Connect?</h2>
+
+    <p style="margin-bottom: 20px;">
+      A One Match connection lasts <strong>one week</strong>. During this time, both of you should:
+    </p>
+
+    <ul style="list-style-type: none; padding-left: 0;">
+      <li style="margin-bottom: 10px;">🟦 Be honest, kind, and intentional.</li>
+      <li style="margin-bottom: 10px;">🟦 Make an effort to get to know each other.</li>
+      <li style="margin-bottom: 10px;">🟦 Check in daily — even a quick message counts.</li>
+      <li style="margin-bottom: 10px;">🟦 Decide by the end of the week if you’d like to keep chatting, meet, or part ways.</li>
+      <li style="margin-bottom: 10px;">⚠️ Not replying or ghosting may result in fewer matches in future.</li>
+    </ul>
+
+    <button onclick="confirmRequest()" style="
+      padding: 12px 24px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      font-size: 16px;
+      cursor: pointer;
+    ">
+      Confirm and Send Request
+    </button>
+  </div>
+</div>
+
 
     <div class="container">
       <div class="profile-grid">
         {% for pref in profiles %}
         <div class="card" onclick="openProfileModal({{ pref.user.id }})">
-          <h3>{{ pref.user.first_name }}</h3>
-          <p>Gender: {{ pref.user.gender }}</p>
-          <p>Age: {{ calculate_age(pref.user.birthday) }}</p>
-          <p>Bio: {{ pref.bio }}</p>
-
-          <!-- Display only the first image -->
+                    <!-- Display only the first image -->
           {% if pref.image1 %}
           <img
             src="{{ url_for('static', filename='uploads/' + pref.image1) }}"
             alt="Profile Image"
           />
           {% endif %}
+<div class="name-age-row">
+  <h3 class="profile-name">{{ pref.user.first_name }} <span>
+  {{ calculate_age(pref.user.birthday) }}</span></h3>
+  <p>{{ pref.location }}</p>
+</div>
+
+{% if pref.interests %}
+  <div class="interests-container">
+    {% for interest in pref.interests.split(',')[:3] %}
+      <span class="interest-tag">{{ interest.strip() }}</span>
+    {% endfor %}
+  </div>
+{% endif %}
+
+
+
         </div>
         {% endfor %}
       </div>
@@ -335,6 +402,7 @@
 <script>
   function openRulesModal() {
     document.getElementById("rulesModal").style.display = "block";
+
   }
 
   function closeRulesModal() {
