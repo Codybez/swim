@@ -5,7 +5,7 @@ from flask import render_template, request, redirect, url_for, flash
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 import bcrypt
-from datetime import datetime
+from datetime import datetime,timedelta 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.sql import func
@@ -15,7 +15,6 @@ from flask_login import LoginManager
 from flask_login import UserMixin
 from flask_login import logout_user
 from flask_login import login_user
-
 
 app = Flask(__name__)
 
@@ -114,10 +113,23 @@ class Preferences(db.Model):
     children = db.Column(db.String(50), nullable=True)
     looking_for = db.Column(db.String(200), nullable=True)
 
-    user = db.relationship('User', backref='preferences')  # One-to-one relationship with User
+    user = db.relationship('User', backref=db.backref('preferences', uselist=False))
 
     def __repr__(self):
         return f'<Preferences {self.id}>'
+
+class MatchRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'accepted', 'declined', 'expired'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    accepted_at = db.Column(db.DateTime, nullable=True)
+    connection_expires_at = db.Column(db.DateTime, nullable=True)
+
+    sender = db.relationship('User', foreign_keys=[sender_id])
+    receiver = db.relationship('User', foreign_keys=[receiver_id])
+
 
 
 @app.route('/')
@@ -216,15 +228,15 @@ def preferences():
 
     if request.method == 'POST':
         # Get data from the form
-        preferred_gender = request.form['preferred_gender']
-        min_age = request.form['min_age']
-        max_age = request.form['max_age']
-        interests = request.form['interests']
-        bio = request.form['bio']
+        preferred_gender = request.form.get('preferred_gender')
+        min_age = request.form.get('min_age')
+        max_age = request.form.get('max_age')
+        interests = request.form.get('interests')
+        bio = request.form.get('bio')
         location = request.form.get("location")
-        radius_km = request.form['radius_km']
-        latitude = request.form['latitude']
-        longitude = request.form['longitude']
+        radius_km = request.form.get('radius_km')
+        latitude = request.form.get('latitude')
+        longitude = request.form.get('longitude')
 
         # Print the form data to the console (Optional for debugging)
         print(f"Preferred Gender: {preferred_gender}")
@@ -442,7 +454,7 @@ def profile():
         flash('Your profile has been updated!', 'success')
         return redirect(url_for('profile'))
 
-    return render_template("profile.html", user=user, preferences=preferences)
+    return render_template("profile.html", user=user, preferences=preferences,calculate_age=calculate_age)
 
 @app.route("/modal/profile/<int:user_id>")
 def profile_modal(user_id):
@@ -486,6 +498,54 @@ def save_preferences():
 
     db.session.commit()
     return "", 204  # Empty response, success
+
+@app.route('/matches')
+@login_required
+def matches():
+    user_id = current_user.id
+    now = datetime.utcnow()
+
+    sent_requests = MatchRequest.query.filter_by(sender_id=user_id).all()
+
+    active_matches = MatchRequest.query.filter(
+        MatchRequest.status == 'accepted',
+        ((MatchRequest.sender_id == user_id) | (MatchRequest.receiver_id == user_id)),
+        MatchRequest.connection_expires_at > now
+    ).all()
+
+    return render_template(
+        'matches.html',
+        sent_requests=sent_requests,
+        active_matches=active_matches,
+        now=now,
+        timedelta=timedelta  # 👈 This is critical
+    )
+
+
+@app.route('/send_match_request/<int:target_user_id>', methods=['POST'])
+@login_required
+def send_match_request(target_user_id):
+    existing_request = MatchRequest.query.filter_by(
+        sender_id=current_user.id,
+        receiver_id=target_user_id,
+        status='pending'
+    ).first()
+
+    if existing_request:
+        flash('You have already sent a request to this user.')
+        return redirect(url_for('dashboard'))
+
+    new_request = MatchRequest(
+        sender_id=current_user.id,
+        receiver_id=target_user_id,
+        status='pending'
+    )
+    db.session.add(new_request)
+    db.session.commit()
+    return redirect(url_for('matches'))  # Sends them to match.html (served by /matches route)
+
+
+
 
 @app.route('/logout')
 def logout():

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <style>
+    body {
+      font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+        "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+
+      overflow-x: hidden;
+      padding: 5px;
+    }
+    .match-card {
+      background: #f0f8ff;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+  <body>
+    {% extends "base.html" %} {% block title %}Home - My Website{% endblock %}
+    {% block content %}
+    <h2>Your Matches</h2>
+
+    <h3>Pending Requests</h3>
+    {% for req in sent_requests %} {% if req.status == 'pending' %}
+    <div class="match-card">
+      <p>To: {{ req.receiver.first_name }}</p>
+      <p>Sent: {{ req.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+      <p>
+        Time left: {{ ((req.created_at + timedelta(hours=24)) -
+        now).total_seconds() // 3600 }} hours
+      </p>
+      <p>Status: {{ req.status }}</p>
+    </div>
+    {% endif %} {% endfor %}
+
+    <h3>Active Matches</h3>
+    {% for match in active_matches %} {% set other_user = match.receiver if
+    match.sender_id == current_user.id else match.sender %}
+    <div class="match-card">
+      <p>Match with: {{ other_user.first_name }}</p>
+      <p>Started: {{ match.accepted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+      <p>
+        Ends in: {{ ((match.connection_expires_at - now).total_seconds() //
+        3600) }} hours
+      </p>
+      <a href="{{ url_for('chat_with', user_id=other_user.id) }}">Open Chat</a>
+    </div>
+    {% endfor %} {% endblock %}
+  </body>
+</html>

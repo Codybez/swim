@@ -97,17 +97,50 @@
         background-color: #f0f0f0;
       }
 
-      .logo i {
-        margin-right: 5px;
-        color: #007bff; /* Matches your theme */
+      .logo {
+        position: relative;
         font-size: 20px;
+        font-weight: bold;
+        color: #007bff;
+        top: 3px;
+      }
+
+      .fish-icon {
+        margin-right: 6px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .bubble {
+        position: absolute;
+        border-radius: 50%;
+        background-color: #00cfff;
+        z-index: 1;
+      }
+
+      .bubble1 {
+        top: -6px;
+        left: 16px;
+        width: 5px;
+        height: 5px;
+      }
+
+      .bubble2 {
+        top: 1px;
+        left: 20px;
+        width: 4px;
+        height: 4px;
       }
     </style>
   </head>
   <body>
     <!-- Header -->
     <header>
-      <div class="logo"><i class="fas fa-fish"></i> DatingPool</div>
+      <div class="logo">
+        <span class="bubble bubble1"></span>
+        <span class="bubble bubble2"></span>
+        <i class="fas fa-fish fish-icon"></i> DatingPool
+      </div>
 
       <div class="hamburger">&#9776;</div>
       <div class="hamburger-menu" style="display: none">
@@ -123,7 +156,7 @@
     <footer>
       <nav class="footer-nav">
         <a href="{{ url_for('dashboard') }}">Dashboard</a>
-        <a href="#"
+        <a href="{{ url_for( 'matches') }}"
           ><i class="fas fa-heart" style="font-size: 24px; color: #0077b6"></i
         ></a>
 

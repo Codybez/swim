@@ -65,6 +65,8 @@
         width: 100%;
         height: 200px;
         object-fit: cover;
+        padding: 10px;
+        border-radius: 20px;
       }
 
       .card-content {
@@ -74,16 +76,19 @@
       }
 
       .card h3 {
-        
-        font-size: 1.1rem;
+        margin-left: 5px;
+        font-size: 1.3rem;
         color: #555;
         text-align: center;
-      }
+        font-family: Arial, Helvetica, sans-serif;      }
       
       .card h3 span {
-        font-size: 1.2rem;
+        
         font-weight: bold;
         color: #007bff;
+        position: relative;
+        bottom: 10px;
+       
         
         
      
@@ -92,8 +97,9 @@
         font-size: 0.8rem;
         font-weight: bold;
         color: #333;
-        margin-top: -5px;
-        text-align: center;
+        margin-top: -10px;
+        margin-left: 20px;
+        text-align: left;
       }
 
       .card button {
@@ -271,12 +277,39 @@
 }
 
 .interest-tag {
-  background-color: #e0f7fa;
-  color: #007b83;
+  background-color: #f5f5f5;
+  color: #555;
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 12px;
   white-space: nowrap;
+}
+
+.name-age-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.profile-name {
+  margin: 0;
+  padding-left: 10px;
+ 
+}
+
+.profile-age {
+
+  font-weight: bold;
+  color: #007bff;
+  font-weight: bold;
+  
+  border: solid, 2px , #007bff; 
+  border-radius: 25px;
+  margin-right: 10px;
+  padding: 1px 6px;
+  font-size: 0.8rem;
+
 }
 
     </style>
@@ -285,7 +318,7 @@
   <body>
     {% extends "base.html" %} {% block title %}Home - My Website{% endblock %}
     {% block content %}
-
+ {% for pref in profiles %}
 <!-- Rules Modal -->
 <div id="rulesModal" class="modal" style="display: none;">
   <div class="modal-content">
@@ -314,24 +347,28 @@
       <li style="margin-bottom: 10px;">⚠️ Not replying or ghosting may result in fewer matches in future.</li>
     </ul>
 
-    <button onclick="confirmRequest()" style="
-      padding: 12px 24px;
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 30px;
-      font-size: 16px;
-      cursor: pointer;
-    ">
-      Confirm and Send Request
-    </button>
+<form id="matchRequestForm" action="{{ url_for('send_match_request', target_user_id=pref.user_id) }}" method="POST">
+  <button type="submit" style="
+    padding: 12px 24px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    font-size: 16px;
+    cursor: pointer;
+  ">
+    Confirm and Send Request
+  </button>
+</form>
+
+
   </div>
 </div>
 
 
     <div class="container">
       <div class="profile-grid">
-        {% for pref in profiles %}
+       
         <div class="card" onclick="openProfileModal({{ pref.user.id }})">
                     <!-- Display only the first image -->
           {% if pref.image1 %}
@@ -341,18 +378,24 @@
           />
           {% endif %}
 <div class="name-age-row">
-  <h3 class="profile-name">{{ pref.user.first_name }} <span>
-  {{ calculate_age(pref.user.birthday) }}</span></h3>
-  <p>{{ pref.location }}</p>
-</div>
-
-{% if pref.interests %}
+  <div class="name-age-flex">
+    <h3 class="profile-name">{{ pref.user.first_name }}</h3>
+    <span class="profile-age">{{ calculate_age(pref.user.birthday) }}</span>
+    
+  </div>
+   
+  {% if pref.interests %}
   <div class="interests-container">
     {% for interest in pref.interests.split(',')[:3] %}
       <span class="interest-tag">{{ interest.strip() }}</span>
     {% endfor %}
   </div>
 {% endif %}
+ 
+</div>
+
+
+
 
 
 

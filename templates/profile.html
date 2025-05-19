@@ -277,6 +277,20 @@ button[onclick="addInterest()"]:hover {
 .form-group-bio{
   padding: 20px;
 }
+
+.users-name{
+  position: absolute;
+  top: 45px;
+  right: 10px;
+  font-size: 1.6rem;
+  color: #007bff ;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  letter-spacing: .20px;
+  
+}
+.users-name span{
+  color: #888;
+}
 </style>
 
 
@@ -362,8 +376,17 @@ document.addEventListener('DOMContentLoaded', function () {
 </div>
 
 <button type="button" class="btn btn-secondary" 
-style="background-color: #007bff; border: none; color: white; padding: 8px 10px; border-radius: 8px; font-weight: 500; margin-left: 10px; margin-bottom: 10px;" 
-onclick="openProfileModal({{ current_user.id }})">Preview My Profile</button>
+style="background-color: #007bff; border: none; color: white; padding: 8px 10px; border-radius: 8px; font-weight: 500; margin-left: 10px; margin-bottom: 10px; font-weight: bold;" 
+onclick="openProfileModal({{ current_user.id }})">View Your Profile</button>
+
+  <h4 class="users-name">
+    {{ user.first_name }} <span> {{ calculate_age(user.birthday) }}</span>
+
+ 
+  </h4>
+
+
+
 
 
 
